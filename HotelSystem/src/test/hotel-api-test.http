@@ -1,4 +1,9 @@
-### 获取所有用户
+### 系统完整测试流程
+### 测试顺序：用户 → 客房 → 宾客 → 预订
+
+### 1. 用户管理测试
+
+### 获取所有用户（初始应为空）
 GET http://localhost:8080/users
 
 ### 创建管理员用户
@@ -27,10 +32,13 @@ Content-Type: application/json
   "role": "RECEPTIONIST"
 }
 
+### 获取所有用户（现在应该有2个用户）
+GET http://localhost:8080/users
+
 ### 根据ID获取用户
 GET http://localhost:8080/users/1
 
-### 更新用户
+### 更新用户信息
 PUT http://localhost:8080/users/1
 Content-Type: application/json
 
@@ -43,6 +51,289 @@ Content-Type: application/json
   "role": "ADMIN",
   "isActive": true
 }
+
+### 2. 客房管理测试
+
+### 获取所有客房（初始应为空）
+GET http://localhost:8080/rooms
+
+### 创建标准大床房
+POST http://localhost:8080/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "roomType": "标准大床房",
+  "description": "舒适的标准大床房，配备独立卫浴",
+  "price": 299.00,
+  "capacity": 2,
+  "amenities": "WiFi,空调,电视,独立卫浴",
+  "status": "AVAILABLE"
+}
+
+### 创建豪华双床房
+POST http://localhost:8080/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "201",
+  "roomType": "豪华双床房",
+  "description": "宽敞的豪华双床房，配备按摩浴缸",
+  "price": 499.00,
+  "capacity": 2,
+  "amenities": "WiFi,空调,电视,按摩浴缸,迷你吧",
+  "status": "AVAILABLE"
+}
+
+### 创建套房
+POST http://localhost:8080/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "301",
+  "roomType": "豪华套房",
+  "description": "奢华的豪华套房，配备客厅和卧室",
+  "price": 899.00,
+  "capacity": 4,
+  "amenities": "WiFi,空调,电视,按摩浴缸,迷你吧,客厅,阳台",
+  "status": "AVAILABLE"
+}
+
+### 获取所有客房（现在应该有3个房间）
+GET http://localhost:8080/rooms
+
+### 获取可用客房
+GET http://localhost:8080/rooms/available
+
+### 根据房型查询
+GET http://localhost:8080/rooms/type/标准大床房
+
+### 根据ID获取客房
+GET http://localhost:8080/rooms/1
+
+### 更新客房信息
+PUT http://localhost:8080/rooms/1
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "roomType": "升级大床房",
+  "description": "升级版舒适大床房，配备独立卫浴和办公区",
+  "price": 349.00,
+  "capacity": 2,
+  "amenities": "WiFi,空调,电视,独立卫浴,办公桌",
+  "status": "AVAILABLE",
+  "isActive": true
+}
+
+### 3. 宾客管理测试
+
+### 获取所有宾客（初始应为空）
+GET http://localhost:8080/guests
+
+### 创建宾客1
+POST http://localhost:8080/guests
+Content-Type: application/json
+
+{
+  "fullName": "张三",
+  "idCardNumber": "110101199001011234",
+  "phone": "13800138000",
+  "email": "zhangsan@example.com",
+  "gender": "MALE",
+  "dateOfBirth": "1990-01-01",
+  "address": "北京市朝阳区",
+  "preferences": "无烟,高楼层",
+  "specialRequests": "需要接机服务"
+}
+
+### 创建宾客2
+POST http://localhost:8080/guests
+Content-Type: application/json
+
+{
+  "fullName": "李四",
+  "idCardNumber": "110101199002021235",
+  "phone": "13900139000",
+  "email": "lisi@example.com",
+  "gender": "FEMALE",
+  "dateOfBirth": "1990-02-02",
+  "address": "上海市浦东新区",
+  "preferences": "安静,有窗",
+  "specialRequests": "需要婴儿床"
+}
+
+### 获取所有宾客（现在应该有2个宾客）
+GET http://localhost:8080/guests
+
+### 根据身份证号查询宾客
+GET http://localhost:8080/guests/search/id-card?idCardNumber=110101199001011234
+
+### 根据姓名搜索宾客
+GET http://localhost:8080/guests/search/name?name=张三
+
+### 根据手机号查询宾客
+GET http://localhost:8080/guests/search/phone?phone=13800138000
+
+### 根据ID获取宾客
+GET http://localhost:8080/guests/1
+
+### 更新宾客信息
+PUT http://localhost:8080/guests/1
+Content-Type: application/json
+
+{
+  "fullName": "张三丰",
+  "idCardNumber": "110101199001011234",
+  "phone": "13800138001",
+  "email": "zhangsanfeng@example.com",
+  "gender": "MALE",
+  "dateOfBirth": "1990-01-01",
+  "address": "北京市海淀区",
+  "preferences": "无烟,高楼层,安静",
+  "specialRequests": "需要接机服务和早餐"
+}
+
+### 4. 预订管理测试
+
+### 获取所有预订（初始应为空）
+GET http://localhost:8080/reservations
+
+### 创建预订1（张三丰预订101房间）
+POST http://localhost:8080/reservations
+Content-Type: application/json
+
+{
+  "guestId": 1,
+  "roomId": 1,
+  "checkInDate": "2025-10-20",
+  "checkOutDate": "2025-10-22",
+  "numberOfGuests": 2,
+  "specialRequests": "需要鲜花布置",
+  "createdBy": "admin"
+}
+
+### 创建预订2（李四预订201房间）
+POST http://localhost:8080/reservations
+Content-Type: application/json
+
+{
+  "guestId": 2,
+  "roomId": 2,
+  "checkInDate": "2025-10-25",
+  "checkOutDate": "2025-10-27",
+  "numberOfGuests": 2,
+  "specialRequests": "需要婴儿床",
+  "createdBy": "reception"
+}
+
+### 获取所有预订（现在应该有2个预订）
+GET http://localhost:8080/reservations
+
+### 根据宾客ID获取预订
+GET http://localhost:8080/reservations/guest/1
+
+### 根据房间ID获取预订
+GET http://localhost:8080/reservations/room/1
+
+### 根据状态获取预订
+GET http://localhost:8080/reservations/status/CONFIRMED
+
+### 根据入住日期范围查询
+GET http://localhost:8080/reservations/checkin-range?start=2025-10-19&end=2025-10-26
+
+### 根据ID获取预订
+GET http://localhost:8080/reservations/1
+
+### 更新预订状态
+PUT http://localhost:8080/reservations/1
+Content-Type: application/json
+
+{
+  "guestId": 1,
+  "roomId": 1,
+  "checkInDate": "2025-10-20",
+  "checkOutDate": "2025-10-23",
+  "numberOfGuests": 2,
+  "totalAmount": 698.00,
+  "paidAmount": 698.00,
+  "status": "CHECKED_IN",
+  "specialRequests": "需要鲜花布置和欢迎水果",
+  "createdBy": "admin"
+}
+
+### 5. 业务逻辑验证测试
+
+### 测试房间可用性（应该返回冲突，因为101房间已被预订）
+POST http://localhost:8080/reservations
+Content-Type: application/json
+
+{
+  "guestId": 2,
+  "roomId": 1,
+  "checkInDate": "2025-10-21",
+  "checkOutDate": "2025-10-23",
+  "numberOfGuests": 2,
+  "specialRequests": "测试房间冲突",
+  "createdBy": "admin"
+}
+
+### 测试可用客房（101房间应该不可用）
+GET http://localhost:8080/rooms/available
+
+### 6. 数据验证测试
+
+### 测试重复用户名（应该返回错误）
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "password123",
+  "fullName": "测试用户",
+  "email": "test@hotel.com",
+  "phone": "13600136000",
+  "role": "RECEPTIONIST"
+}
+
+### 测试重复房间号（应该返回错误）
+POST http://localhost:8080/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "roomType": "测试房间",
+  "description": "测试重复房间号",
+  "price": 100.00,
+  "capacity": 1,
+  "amenities": "WiFi",
+  "status": "AVAILABLE"
+}
+
+### 测试重复身份证号（应该返回错误）
+POST http://localhost:8080/guests
+Content-Type: application/json
+
+{
+  "fullName": "测试宾客",
+  "idCardNumber": "110101199001011234",
+  "phone": "13700137000",
+  "email": "test@example.com",
+  "gender": "MALE",
+  "dateOfBirth": "1995-01-01",
+  "address": "测试地址"
+}
+
+### 7. 清理测试数据（可选）
+
+### 删除预订
+DELETE http://localhost:8080/reservations/2
+
+### 删除宾客
+DELETE http://localhost:8080/guests/2
+
+### 删除客房
+DELETE http://localhost:8080/rooms/3
 
 ### 删除用户
 DELETE http://localhost:8080/users/2
