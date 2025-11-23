@@ -83,7 +83,9 @@ public class ReservationService {
                     reservation.setTotalAmount(totalAmount);
                 }
 
-                // 注意：房间状态在付款成功时才设为 RESERVED（见 PaymentService.markSuccess）
+                // 新建预订时设为 PENDING 状态，房间暂不锁定
+                // 只有在支付成功后才会变为 CONFIRMED 并锁定房间
+                reservation.setStatus(Reservation.ReservationStatus.PENDING);
 
                 Reservation savedReservation = reservationRepository.save(reservation);
                 return ReservationDto.fromEntity(savedReservation);
@@ -210,7 +212,7 @@ public class ReservationService {
         return null;
     }
 
-    // 取消预订并返回退款金额
+    // 取消预订：创建退款交易（PENDING），返回交易ID供前端调用回调
     @com.hotelsystem.audit.Auditable(action = "CANCEL_RESERVATION")
     public Map<String, Object> cancelReservation(Long reservationId) {
         Reservation existingReservation = reservationRepository.findById(reservationId)
@@ -225,55 +227,44 @@ public class ReservationService {
             throw new RuntimeException("已入住或已离店的预订不能取消");
         }
 
+        // 允许取消的状态：PENDING、CONFIRMED
+        // 计算退款金额
         java.time.LocalDate today = java.time.LocalDate.now();
         java.time.LocalDate checkIn = existingReservation.getCheckInDate();
 
         java.math.BigDecimal paid = existingReservation.getPaidAmount() == null ? java.math.BigDecimal.ZERO : existingReservation.getPaidAmount();
         java.math.BigDecimal refund = java.math.BigDecimal.ZERO;
 
-        // 规则：在入住前24小时（含当天）之前取消 => 全额退款
+        // 退款规则：在入住前24小时（含当天）之前取消 => 全额退款
         // 在入住前24小时内取消（但在入住日之前） => 收取10%违约金
-        // 入住当天或之后不可取消
+        // 入住当天或之后 => 无退款
         java.time.LocalDate freeCancelDeadline = checkIn.minusDays(1);
 
         if (today.isBefore(freeCancelDeadline) || today.isEqual(freeCancelDeadline)) {
+            // 在24小时前：全额退款
             refund = paid;
         } else if (today.isBefore(checkIn)) {
-            // 在24小时内取消，收10%违约金
+            // 在24小时内但还未入住：收10%违约金，90%退款
             refund = paid.multiply(new java.math.BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP);
         } else {
-            throw new RuntimeException("已过可取消时间或已入住，无法取消");
+            // 入住当天或之后：无退款
+            refund = java.math.BigDecimal.ZERO;
         }
 
-        existingReservation.setStatus(Reservation.ReservationStatus.CANCELLED);
-        reservationRepository.save(existingReservation);
+        // 创建退款交易，状态为 PENDING
+        // 只有在退款回调成功后，预订状态才会真正变为 CANCELLED
+        com.hotelsystem.entity.PaymentTransaction refundTx = paymentService.createPendingRefund(
+                reservationId,
+                refund,
+                "取消预订 " + existingReservation.getReservationNumber()
+        );
 
-        // 释放房间（若房间当前为 RESERVED，则恢复为 AVAILABLE）
-        Room room = existingReservation.getRoom();
-        if (room != null) {
-            try {
-                if (room.getStatus() == Room.RoomStatus.RESERVED) {
-                    room.setStatus(Room.RoomStatus.AVAILABLE);
-                    roomRepository.save(room);
-                }
-            } catch (Exception ex) {
-                // 释放房间失败不影响主流程，记录或监控可在真实系统中处理
-            }
-        }
-
-        // 记录退款交易（占位）
-        if (refund.compareTo(java.math.BigDecimal.ZERO) > 0) {
-            try {
-                paymentService.createPendingRefund(existingReservation.getId(), refund, "Cancel refund");
-            } catch (Exception ex) {
-                // 记录失败不影响业务主流程
-            }
-        }
-
+        // 返回交易信息供前端调用回调接口
         Map<String, Object> result = new HashMap<>();
+        result.put("transactionId", refundTx.getId());
         result.put("refundAmount", refund);
-        result.put("paidAmount", paid);
         result.put("reservationId", existingReservation.getId());
+        result.put("message", "取消预订成功，请确认退款。请调用 /payments/callback 接口完成退款流程");
         return result;
     }
 

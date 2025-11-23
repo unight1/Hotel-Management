@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/auth/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/guests").permitAll()
+                    // 支付回调通常由第三方服务直接调用，不使用 JWT，因此允许匿名访问回调接口
+                    .requestMatchers(HttpMethod.POST, "/payments/callback").permitAll()
                     .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,5 +1,6 @@
 package com.hotelsystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hotelsystem.entity.Guest;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class GuestDto {
     @Size(max = 20, message = "手机号长度不能超过20个字符")
     private String phone;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Size(min = 6, message = "密码长度至少6个字符")
     private String password;
 

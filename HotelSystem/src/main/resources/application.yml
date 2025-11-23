@@ -1,5 +1,12 @@
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
 
 spring:
   datasource:
@@ -17,6 +24,9 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
+  mvc:
+    charset: UTF-8
+    
 logging:
   level:
     com.hotelsystem: DEBUG

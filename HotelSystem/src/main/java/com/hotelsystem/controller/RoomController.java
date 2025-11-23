@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -23,6 +25,42 @@ public class RoomController {
     public ResponseEntity<ApiResponse<List<RoomDto>>> getAllRooms() {
         List<RoomDto> rooms = roomService.getAllRooms();
         return ResponseEntity.ok(ApiResponse.success(rooms));
+    }
+
+    @GetMapping("/available")
+    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
+    public ResponseEntity<ApiResponse<List<RoomDto>>> getAvailableRooms(
+            @RequestParam(required = false) String checkIn,
+            @RequestParam(required = false) String checkOut) {
+        try {
+            LocalDate in = (checkIn == null || checkIn.isEmpty()) ? null : LocalDate.parse(checkIn);
+            LocalDate out = (checkOut == null || checkOut.isEmpty()) ? null : LocalDate.parse(checkOut);
+            List<RoomDto> availableRooms = roomService.getAvailableRooms(in, out);
+            return ResponseEntity.ok(ApiResponse.success(availableRooms));
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.ok(ApiResponse.error("日期格式错误，使用 YYYY-MM-DD 格式"));
+        }
+    }
+
+    @GetMapping("/by-type")
+    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
+    public ResponseEntity<ApiResponse<List<RoomDto>>> getRoomsByType(@RequestParam String roomType) {
+        List<RoomDto> rooms = roomService.getRoomsByType(roomType);
+        return ResponseEntity.ok(ApiResponse.success(rooms));
+    }
+
+    @GetMapping("/type/{roomType}")
+    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
+    public ResponseEntity<ApiResponse<List<RoomDto>>> getRoomsByTypePath(@PathVariable String roomType) {
+        List<RoomDto> rooms = roomService.getRoomsByType(roomType);
+        return ResponseEntity.ok(ApiResponse.success(rooms));
+    }
+
+    @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
+    public ResponseEntity<ApiResponse<List<RoomDto>>> getActiveRooms() {
+        List<RoomDto> activeRooms = roomService.getActiveRooms();
+        return ResponseEntity.ok(ApiResponse.success(activeRooms));
     }
 
     @GetMapping("/{id}")
@@ -66,26 +104,5 @@ public class RoomController {
         } catch (RuntimeException e) {
             return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
         }
-    }
-
-    @GetMapping("/available")
-    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
-    public ResponseEntity<ApiResponse<List<RoomDto>>> getAvailableRooms() {
-        List<RoomDto> availableRooms = roomService.getAvailableRooms();
-        return ResponseEntity.ok(ApiResponse.success(availableRooms));
-    }
-
-    @GetMapping("/type/{roomType}")
-    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
-    public ResponseEntity<ApiResponse<List<RoomDto>>> getRoomsByType(@PathVariable String roomType) {
-        List<RoomDto> rooms = roomService.getRoomsByType(roomType);
-        return ResponseEntity.ok(ApiResponse.success(rooms));
-    }
-
-    @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN','HOUSEKEEPING')")
-    public ResponseEntity<ApiResponse<List<RoomDto>>> getActiveRooms() {
-        List<RoomDto> activeRooms = roomService.getActiveRooms();
-        return ResponseEntity.ok(ApiResponse.success(activeRooms));
     }
 }

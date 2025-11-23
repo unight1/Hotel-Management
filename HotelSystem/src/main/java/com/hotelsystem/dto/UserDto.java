@@ -1,5 +1,6 @@
 package com.hotelsystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hotelsystem.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ public class UserDto {
     @Size(max = 50, message = "用户名长度不能超过50个字符")
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, message = "密码长度至少6个字符")
     private String password;
