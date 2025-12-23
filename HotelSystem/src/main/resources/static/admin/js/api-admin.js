@@ -1,17 +1,17 @@
-// API工具类
-const API_BASE_URL = 'http://localhost:8080';
+// 管理端API工具类 - 使用8081端口
+const API_BASE_URL = 'http://localhost:8081';
 
 class ApiClient {
     constructor() {
-        this.token = localStorage.getItem('token');
+        this.token = localStorage.getItem('adminToken');
     }
 
     setToken(token) {
         this.token = token;
         if (token) {
-            localStorage.setItem('token', token);
+            localStorage.setItem('adminToken', token);
         } else {
-            localStorage.removeItem('token');
+            localStorage.removeItem('adminToken');
         }
     }
 
@@ -33,7 +33,6 @@ class ApiClient {
         try {
             const response = await fetch(`${API_BASE_URL}${url}`, config);
             
-            // 检查响应是否为空
             const text = await response.text();
             if (!text) {
                 throw new Error('响应为空');
@@ -85,25 +84,21 @@ const api = new ApiClient();
 
 // 认证相关
 const auth = {
-    async login(email, password, role = 'GUEST') {
-        const response = await api.post('/auth/login', { username: email, password: password });
+    async login(username, password, role) {
+        const response = await api.post('/auth/login', { username, password });
         if (response.success && response.data && response.data.token) {
             api.setToken(response.data.token);
-            localStorage.setItem('userRole', role);
-            localStorage.setItem('userEmail', email);
+            localStorage.setItem('adminRole', role);
+            localStorage.setItem('adminUsername', username);
         }
         return response;
     },
 
-    async register(guestData) {
-        return api.post('/guests', guestData);
-    },
-
     logout() {
         api.setToken(null);
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userEmail');
-        window.location.href = '/index.html';
+        localStorage.removeItem('adminRole');
+        localStorage.removeItem('adminUsername');
+        window.location.href = '/admin/login.html';
     },
 
     isAuthenticated() {
@@ -111,7 +106,7 @@ const auth = {
     },
 
     getUserRole() {
-        return localStorage.getItem('userRole');
+        return localStorage.getItem('adminRole');
     }
 };
 
@@ -127,48 +122,90 @@ const rooms = {
         return response.data;
     },
 
-    async getAvailable(checkInDate, checkOutDate) {
-        // 简化处理：获取所有房间，前端过滤
-        return this.getAll();
+    async create(roomData) {
+        const response = await api.post('/rooms', roomData);
+        return response.data;
+    },
+
+    async update(id, roomData) {
+        const response = await api.put(`/rooms/${id}`, roomData);
+        return response.data;
+    },
+
+    async delete(id) {
+        const response = await api.delete(`/rooms/${id}`);
+        return response;
     }
 };
 
 // 预订相关
 const reservations = {
-    async create(reservationData) {
-        const response = await api.post('/reservations', reservationData);
-        return response.data;
-    },
-
-    async getMyReservations() {
-        const response = await api.get('/reservations/me');
+    async getAll() {
+        const response = await api.get('/reservations');
         return response.data || [];
     },
 
-    async cancel(id) {
-        const response = await api.post(`/reservations/${id}/cancel`);
+    async getById(id) {
+        const response = await api.get(`/reservations/${id}`);
+        return response.data;
+    },
+
+    async checkIn(reservationId, data) {
+        const response = await api.post(`/frontdesk/checkin/${reservationId}`, data || {});
+        return response;
+    },
+
+    async checkOut(reservationId, data) {
+        const response = await api.post(`/frontdesk/checkout/${reservationId}`, data || {});
+        return response;
+    }
+};
+
+// 统计相关
+const statistics = {
+    async getToday() {
+        const response = await api.get('/api/statistics/today');
+        return response.data || {};
+    },
+
+    async getDateRange(startDate, endDate) {
+        const response = await api.get(`/api/statistics/date-range?startDate=${startDate}&endDate=${endDate}`);
+        return response.data || {};
+    }
+};
+
+// 宾客相关
+const guests = {
+    async getAll() {
+        const response = await api.get('/guests');
+        return response.data || [];
+    },
+
+    async getById(id) {
+        const response = await api.get(`/guests/${id}`);
         return response.data;
     }
 };
 
-// 支付相关
-const payments = {
-    async createPayment(transactionId, amount, description) {
-        const response = await api.post('/payments/create', {
-            reservationId: transactionId,
-            amount: amount,
-            note: description
-        });
+// 用户相关
+const users = {
+    async getAll() {
+        const response = await api.get('/users');
+        return response.data || [];
+    },
+
+    async create(userData) {
+        const response = await api.post('/users', userData);
         return response.data;
     },
 
-    async simulatePayment(transactionId) {
-        // 模拟支付成功
-        const response = await api.post('/payments/callback', {
-            transactionId: transactionId,
-            status: 'SUCCESS',
-            providerTransactionId: 'SIM_' + Date.now()
-        });
+    async update(id, userData) {
+        const response = await api.put(`/users/${id}`, userData);
+        return response.data;
+    },
+
+    async delete(id) {
+        const response = await api.delete(`/users/${id}`);
         return response;
     }
 };

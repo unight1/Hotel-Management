@@ -44,13 +44,18 @@ public class ReservationController {
     @PreAuthorize("hasAnyRole('GUEST','RECEPTIONIST','MANAGER','ADMIN')")
     public ResponseEntity<ApiResponse<ReservationDto>> createReservation(@Valid @RequestBody ReservationDto reservationDto, Authentication authentication) {
         try {
-            // 如果是宾客，确保 reservationDto.guestId 与当前认证宾客一致
+            // 如果是宾客，从token中获取guestId
             if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_GUEST"))) {
                 String email = authentication.getName();
                 var guestOpt = guestRepository.findByEmail(email);
-                if (guestOpt.isEmpty() || !guestOpt.get().getId().equals(reservationDto.getGuestId())) {
-                    return ResponseEntity.status(403).body(ApiResponse.error("无权为其他宾客创建预订"));
+                if (guestOpt.isEmpty()) {
+                    return ResponseEntity.status(403).body(ApiResponse.error("未找到当前宾客信息"));
                 }
+                // 自动设置guestId为当前登录宾客
+                reservationDto.setGuestId(guestOpt.get().getId());
+            } else if (reservationDto.getGuestId() == null) {
+                // 员工创建预订时必须提供guestId
+                return ResponseEntity.status(400).body(ApiResponse.error("创建预订时必须指定宾客ID"));
             }
 
             ReservationDto createdReservation = reservationService.createReservation(reservationDto);

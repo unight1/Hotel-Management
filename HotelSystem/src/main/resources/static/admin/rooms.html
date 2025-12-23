@@ -56,7 +56,7 @@
         <div class="container">
             <h1>民宿管理系统 - 管理后台</h1>
             <div class="nav-links">
-                <a href="/index.html">返回首页</a>
+                <a href="http://localhost:8080/">返回宾客端</a>
                 <a href="#" onclick="auth.logout(); return false;">退出</a>
             </div>
         </div>
@@ -65,12 +65,12 @@
     <div class="dashboard-container">
         <div class="sidebar">
             <h3>菜单</h3>
-            <a href="/admin/dashboard.html">仪表盘</a>
-            <a href="/admin/reservations.html">预订管理</a>
-            <a href="/admin/rooms.html" class="active">房间管理</a>
-            <a href="/admin/guests.html">宾客管理</a>
-            <a href="/admin/statistics.html">统计报表</a>
-            <a href="/admin/users.html">员工管理</a>
+            <a href="http://localhost:8081/admin/dashboard.html">仪表盘</a>
+            <a href="http://localhost:8081/admin/reservations.html">预订管理</a>
+            <a href="http://localhost:8081/admin/rooms.html" class="active">房间管理</a>
+            <a href="http://localhost:8081/admin/guests.html">宾客管理</a>
+            <a href="http://localhost:8081/admin/statistics.html">统计报表</a>
+            <a href="http://localhost:8081/admin/users.html">员工管理</a>
         </div>
 
         <div class="main-content">
@@ -132,12 +132,12 @@
         </div>
     </div>
 
-    <script src="/js/api.js"></script>
+    <script src="/admin/js/api-admin.js"></script>
     <script>
         // 检查登录状态
         if (!auth.isAuthenticated() || auth.getUserRole() === 'GUEST') {
             alert('请先登录');
-            window.location.href = '/admin/login.html';
+            window.location.href = 'http://localhost:8081/admin/login.html';
         }
 
         async function loadRooms() {

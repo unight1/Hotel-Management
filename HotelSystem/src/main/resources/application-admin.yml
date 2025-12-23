@@ -1,5 +1,5 @@
 server:
-  port: 8080  # 宾客端端口
+  port: 8081
   servlet:
     encoding:
       charset: UTF-8
@@ -41,3 +41,4 @@ app:
   initial-admin:
     username: admin
     password: admin123
+

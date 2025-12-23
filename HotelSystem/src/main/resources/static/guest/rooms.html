@@ -276,11 +276,17 @@
             const requests = document.getElementById('bookingRequests').value;
             const roomId = parseInt(document.getElementById('bookingRoomId').value);
 
-            // 获取宾客ID（简化处理，实际应从登录信息获取）
+            // 获取宾客ID（需要先登录）
+            if (!auth.isAuthenticated()) {
+                alert('请先登录');
+                window.location.href = '/guest/login.html';
+                return;
+            }
+
             try {
-                // 创建预订
+                // 创建预订（guestId由后端从token中自动获取）
                 const reservation = await reservations.create({
-                    guestId: 1, // 简化处理，实际应从登录信息获取
+                    guestId: null, // 后端会从token中自动获取
                     roomId: roomId,
                     checkInDate: checkIn,
                     checkOutDate: checkOut,

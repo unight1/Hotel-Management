@@ -37,6 +37,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/payments/callback").permitAll()
                     // 允许访问静态资源
                     .requestMatchers("/", "/index.html", "/guest/**", "/admin/**", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                    // 允许宾客端匿名访问房间列表（用于浏览）
+                    .requestMatchers(HttpMethod.GET, "/rooms").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/rooms/**").permitAll()
                     .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
