@@ -30,13 +30,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        String token = jwtUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new AuthResponse(token));
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+            String token = jwtUtil.generateToken(userDetails);
+            
+            // 返回统一格式的响应
+            return ResponseEntity.ok(com.hotelsystem.dto.ApiResponse.success("登录成功", new AuthResponse(token)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(com.hotelsystem.dto.ApiResponse.error("登录失败: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/register")

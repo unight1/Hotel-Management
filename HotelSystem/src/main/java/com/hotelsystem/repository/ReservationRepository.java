@@ -33,4 +33,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                   @Param("checkOut") LocalDate checkOut,
                                                   @Param("excludeReservationId") Long excludeReservationId);
 
+    // 统计查询方法
+    long countByCheckInDateAndStatus(LocalDate checkInDate, Reservation.ReservationStatus status);
+    
+    long countByCheckOutDateAndStatus(LocalDate checkOutDate, Reservation.ReservationStatus status);
+    
+    long countByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+    
+    @Query("SELECT COALESCE(SUM(r.paidAmount), 0) FROM Reservation r WHERE DATE(r.createdAt) = :date")
+    java.math.BigDecimal sumPaidAmountByDate(@Param("date") LocalDate date);
+    
+    @Query("SELECT COALESCE(SUM(r.paidAmount), 0) FROM Reservation r WHERE r.checkInDate BETWEEN :startDate AND :endDate")
+    java.math.BigDecimal sumPaidAmountByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    long countByCheckInDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    long countByStatusAndCheckInDateBetween(Reservation.ReservationStatus status, LocalDate startDate, LocalDate endDate);
+
 }
